@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+    <script>
+        function renderer(vNode,container){
+            // 1. 创建 dom 元素
+            const el=document.createElement(vNode.tag)
+            // 2. 处理属性和事件
+            for(let key in vNode.props){
+                // 处理点击事件
+                if(/^on/.test(key)){
+                    el.addEventListener(
+                        // 获取事件名
+                        key.substr(2).toLowerCase(),
+                        // 执行绑定的回调函数
+                        vNode.props[key]
+                    )
+                }
+            }
+            // 3. 处理孩子节点
+            if(typeof vNode.children=="string"){
+                // 直接渲染
+                el.appendChild(document.createTextNode(vNode.children))
+            }else if(Array.isArray(vNode.children)){
+                vNode.children.forEach((item)=>{
+                    renderer(item,el)
+                })
+            }
+            container.appendChild(el)
+        }
+        const vNode={
+            tag:'div',
+            props:{
+                onclick:()=>alert('hello')
+            },
+            children:'click me'
+        }
+        renderer(vNode,document.body)
+    </script>
+</body>
+</html>
