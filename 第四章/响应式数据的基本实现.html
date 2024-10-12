@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+    <script>
+        // 1.设置一个存储副作用的桶
+        const bucket=new Set()
+        const data={
+            text:'hello world'
+        }
+        const obj=new Proxy(data,{
+            // 拦截读的操作
+            get(target,key){
+                // 将副作用函数入桶
+                bucket.add(effect)
+                return target[key]
+            },
+            // 拦截写的操作
+            set(target,key,newVal){
+                target[key]=newVal
+                bucket.forEach((fn)=>fn())
+                return true
+            }
+        })
+
+        // 副作用函数
+        function effect(){
+            document.body.innerHTML=obj.text
+        }
+        effect()
+        setTimeout(()=>{
+            obj.text='小华'
+        },2000)
+    </script>
+</body>
+</html>

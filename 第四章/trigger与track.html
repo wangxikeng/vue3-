@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+    <script>
+        // 1.设置一个存储副作用的桶
+        const bucket=new WeakMap()
+        const data={
+            text:'hello world'
+        }
+        const obj=new Proxy(data,{
+            // 拦截读的操作
+            get(target,key){
+                // 将副作用函数入桶
+                track(target,key)
+                return target[key]
+            },
+            // 拦截写的操作
+            set(target,key,newVal){
+                target[key]=newVal
+                trigger(target,key)
+                return true
+            }
+        })
+        let activeEffect=null
+        // 注册副作用函数
+        function effect(fn){
+            activeEffect=fn
+            fn()
+        }
+        effect(
+            ()=>{
+                document.body.innerHTML=obj.text
+            }
+        )
+        setTimeout(()=>{
+            obj.text='小华'
+        },2000)
+
+        function track(target,key){
+            if(!activeEffect)return target[key]
+            let depsMap=bucket.get(target)
+            if(!depsMap){
+                bucket.set(target,depsMap=new Map())
+            }
+            let deps=depsMap.get(key)
+            if(!deps){
+                depsMap.set(key,deps=new Set())
+            }
+            deps.add(activeEffect)
+        }
+
+        function trigger(target,key){
+            let depsMap=bucket.get(target)
+            if(!depsMap) return 
+            let effects=depsMap.get(key)
+            effects&&effects.forEach((fn)=>fn())
+        }
+    </script>
+</body>
+</html>
